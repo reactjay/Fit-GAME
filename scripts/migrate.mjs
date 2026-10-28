@@ -18,7 +18,6 @@ const client = new pg.Client({ connectionString: url, ssl: /sslmode=require/.tes
 await client.connect();
 try {
   await client.query("create table if not exists public.schema_migrations (name text primary key, applied_at timestamptz not null default now())");
-  await client.query("revoke all on public.schema_migrations from authenticated, anon");
   const done = new Set((await client.query("select name from public.schema_migrations")).rows.map((r) => r.name));
   for (const file of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
     if (done.has(file)) continue;
@@ -35,6 +34,13 @@ try {
       throw e;
     }
   }
+  await client.query(`
+    do $$ begin
+      if exists (select 1 from pg_roles where rolname = 'authenticated') and exists (select 1 from pg_roles where rolname = 'anon') then
+        execute 'revoke all on public.schema_migrations from authenticated, anon';
+      end if;
+    end $$;
+  `);
   console.log("database is up to date");
 } finally {
   await client.end();
