@@ -1,0 +1,38 @@
+# Render Blueprint Specification for JustUs
+# Deploy at: https://render.com
+services:
+  - type: web
+    name: justus
+    runtime: node
+    plan: starter
+    region: frankfurt # Low latency connection to West Africa (Nigeria)
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: justus-db
+          property: connectionString
+      # Optional: Cloudflare R2 bucket credentials for persistent photos & voice notes
+      # - key: R2_ACCOUNT_ID
+      #   sync: false
+      # - key: R2_ACCESS_KEY_ID
+      #   sync: false
+      # - key: R2_SECRET_ACCESS_KEY
+      #   sync: false
+      # - key: R2_BUCKET
+      #   sync: false
+      # Optional: Cloudflare TURN for peer-to-peer audio/video calls across mobile networks
+      # - key: CLOUDFLARE_TURN_KEY_ID
+      #   sync: false
+      # - key: CLOUDFLARE_TURN_API_TOKEN
+      #   sync: false
+
+databases:
+  - name: justus-db
+    databaseName: justus
+    user: justus_user
+    plan: starter
+    region: frankfurt

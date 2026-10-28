@@ -1,0 +1,202 @@
+@import "tailwindcss";
+
+/* ── JustUs design tokens ──────────────────────────────────────────────
+   Midnight plum base, indigo depth, soft rose for warmth, cream for text,
+   gold used sparingly for moments that matter (rewards, anniversaries). */
+:root,
+[data-theme="midnight"] {
+  --bg: #0e0b1f;
+  --bg-raised: #171230;
+  --surface: #1e1840;
+  --surface-2: #282054;
+  --line: #3a3170;
+  --ink: #f7efe3;
+  --ink-soft: #c9bfd9;
+  --ink-faint: #a499c4;
+  --rose: #f3a6bd;
+  --rose-strong: #e8789a;
+  --indigo: #6f63d9;
+  --gold: #e2bd78;
+  --danger: #ff8a8a;
+  --ok: #8fe3b5;
+  --bubble-me: #e8789a;
+  --bubble-me-ink: #1a0d1a;
+  --bubble-them: #282054;
+  --sky-a: #0e0b1f;
+  --sky-b: #241a4d;
+  color-scheme: dark;
+}
+
+[data-theme="rose"] {
+  --bg: #1a0d18;
+  --bg-raised: #241222;
+  --surface: #2f182c;
+  --surface-2: #3d2039;
+  --line: #5a3253;
+  --ink: #fbf0ea;
+  --ink-soft: #e2c8d2;
+  --ink-faint: #b994a8;
+  --rose: #ffb3c6;
+  --rose-strong: #f07fa0;
+  --indigo: #9b7fe0;
+  --gold: #f0c987;
+  --bubble-me: #f07fa0;
+  --bubble-me-ink: #2a0b18;
+  --bubble-them: #3d2039;
+  --sky-a: #1a0d18;
+  --sky-b: #3b1736;
+  color-scheme: dark;
+}
+
+[data-theme="dawn"] {
+  --bg: #f8f1e7;
+  --bg-raised: #fffaf2;
+  --surface: #ffffff;
+  --surface-2: #f1e6f0;
+  --line: #e2d3e3;
+  --ink: #241a3d;
+  --ink-soft: #4d4168;
+  --ink-faint: #6e6390;
+  --rose: #c2476e;
+  --rose-strong: #b23a61;
+  --indigo: #5146b8;
+  --gold: #9a6b16;
+  --danger: #c22f3a;
+  --ok: #1d7a4b;
+  --bubble-me: #b23a61;
+  --bubble-me-ink: #ffffff;
+  --bubble-them: #ece0ee;
+  --sky-a: #fbe9dc;
+  --sky-b: #e9dcf5;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-raised: var(--bg-raised);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rose: var(--rose);
+  --color-rose-strong: var(--rose-strong);
+  --color-indigo: var(--indigo);
+  --color-gold: var(--gold);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+}
+
+html {
+  background: var(--bg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--rose) 45%, transparent);
+}
+
+.sky {
+  background:
+    radial-gradient(120% 80% at 80% -10%, color-mix(in oklab, var(--indigo) 28%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--sky-a), var(--sky-b));
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+@keyframes rise {
+  0% { transform: translateY(0) scale(0.6); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translateY(-70vh) scale(1.2); opacity: 0; }
+}
+
+@keyframes rain {
+  from { background-position: 0 0; }
+  to { background-position: -40px 400px; }
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pop {
+  0% { transform: scale(0.6) rotate(-4deg); opacity: 0; }
+  70% { transform: scale(1.04) rotate(1deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--rose) 60%, transparent); }
+  100% { box-shadow: 0 0 0 28px transparent; }
+}
+
+.animate-twinkle { animation: twinkle 3.5s ease-in-out infinite; }
+.animate-bob { animation: bob 3s ease-in-out infinite; }
+.animate-ring { animation: ring 1.4s ease-out infinite; }
+
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.prose-story p { margin-bottom: 1.05em; line-height: 1.75; }
+.prose-story p:first-child::first-letter {
+  font-family: var(--font-display);
+  float: left;
+  font-size: 3.2em;
+  line-height: 0.9;
+  padding: 0.08em 0.1em 0 0;
+  color: var(--gold);
+}
+
+/* Respect the OS setting and the in-app "reduce motion" preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+[data-motion="reduced"] *, [data-motion="reduced"] *::before, [data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}

@@ -1,0 +1,130 @@
+// Prompt banks for the mini-games. IDs are stable so saved progress keeps working
+// when new prompts are appended. {name} is replaced with the subject's display name.
+
+export type TriviaPrompt = { id: string; q: string };
+export type WyrPrompt = { id: string; a: string; b: string; tone: "funny" | "thoughtful" | "romantic" };
+export type CardCategory = "funny" | "memories" | "future" | "deep" | "romance";
+export type CardPrompt = { id: string; cat: CardCategory; q: string };
+
+export const TRIVIA: TriviaPrompt[] = [
+  { id: "t1", q: "What is {name}'s comfort food after a long day?" },
+  { id: "t2", q: "Which song would {name} sing loudest at a party?" },
+  { id: "t3", q: "What's {name}'s biggest pet peeve?" },
+  { id: "t4", q: "Where would {name} travel tomorrow if money didn't matter?" },
+  { id: "t5", q: "What was {name}'s first impression of you?" },
+  { id: "t6", q: "What does {name} order at a buka?" },
+  { id: "t7", q: "Which movie can {name} watch over and over?" },
+  { id: "t8", q: "What's {name}'s secret talent?" },
+  { id: "t9", q: "What time does {name} actually wake up on a Saturday?" },
+  { id: "t10", q: "What would {name} grab first if the house was on fire (pets and people are safe)?" },
+  { id: "t11", q: "What is {name}'s love language?" },
+  { id: "t12", q: "What's {name}'s dream job as a child?" },
+  { id: "t13", q: "Jollof, fried rice or ofada — what's {name}'s pick?" },
+  { id: "t14", q: "What makes {name} laugh every single time?" },
+  { id: "t15", q: "What's the one chore {name} would pay someone to do forever?" },
+  { id: "t16", q: "Who is {name}'s celebrity crush?" },
+  { id: "t17", q: "What is {name} most proud of this year?" },
+  { id: "t18", q: "What's {name}'s favourite thing about weekends?" },
+  { id: "t19", q: "What colour would {name} paint our bedroom?" },
+  { id: "t20", q: "What's {name}'s go-to karaoke move?" },
+  { id: "t21", q: "Which app does {name} open first in the morning?" },
+  { id: "t22", q: "What's a small thing that instantly ruins {name}'s mood?" },
+  { id: "t23", q: "What's {name}'s ideal date night?" },
+  { id: "t24", q: "What snack is always in {name}'s bag?" },
+];
+
+export const WYR: WyrPrompt[] = [
+  { id: "w1", a: "Have breakfast in bed every Sunday", b: "Have a surprise date every month", tone: "romantic" },
+  { id: "w2", a: "Only eat jollof for a year", b: "Never eat jollof again", tone: "funny" },
+  { id: "w3", a: "Relive our first date", b: "Skip ahead to see us in 10 years", tone: "thoughtful" },
+  { id: "w4", a: "Sit in Lagos traffic with great music", b: "Walk an hour in perfect weather", tone: "funny" },
+  { id: "w5", a: "Write each other letters for a month", b: "Send voice notes only for a month", tone: "romantic" },
+  { id: "w6", a: "Live by the beach", b: "Live in the mountains", tone: "thoughtful" },
+  { id: "w7", a: "Always say exactly what you think", b: "Never be able to speak first", tone: "funny" },
+  { id: "w8", a: "A big wedding with everyone", b: "A tiny ceremony, just us and a few", tone: "romantic" },
+  { id: "w9", a: "Know every language", b: "Play every instrument", tone: "thoughtful" },
+  { id: "w10", a: "Have NEPA light 24/7 forever", b: "Have free data forever", tone: "funny" },
+  { id: "w11", a: "Slow dance in the kitchen", b: "Sing loudly in the car together", tone: "romantic" },
+  { id: "w12", a: "Travel the world for a year", b: "Build our dream home", tone: "thoughtful" },
+  { id: "w13", a: "Fight one horse-sized duck", b: "Fight a hundred duck-sized horses", tone: "funny" },
+  { id: "w14", a: "Cook dinner together every night", b: "Try a new restaurant every week", tone: "romantic" },
+  { id: "w15", a: "Have a rewind button", b: "Have a pause button", tone: "thoughtful" },
+  { id: "w16", a: "Always be 10 minutes late", b: "Always be 30 minutes early", tone: "funny" },
+  { id: "w17", a: "A sunrise picnic", b: "A midnight drive", tone: "romantic" },
+  { id: "w18", a: "Read each other's minds for a day", b: "Swap bodies for a day", tone: "funny" },
+  { id: "w19", a: "Know the date of every future milestone", b: "Be surprised by all of them", tone: "thoughtful" },
+  { id: "w20", a: "Get matching tattoos", b: "Get matching outfits for a party", tone: "romantic" },
+  { id: "w21", a: "Give up owambe parties", b: "Give up small chops", tone: "funny" },
+  { id: "w22", a: "Have one perfect day repeated", b: "A hundred ordinary good days", tone: "thoughtful" },
+];
+
+export const CARD_CATEGORIES: { id: CardCategory; label: string; emoji: string }[] = [
+  { id: "funny", label: "Funny", emoji: "😂" },
+  { id: "memories", label: "Memories", emoji: "📸" },
+  { id: "future", label: "Future plans", emoji: "🔭" },
+  { id: "deep", label: "Thoughtful", emoji: "🌙" },
+  { id: "romance", label: "Romance", emoji: "🌹" },
+];
+
+export const CARDS: CardPrompt[] = [
+  { id: "c1", cat: "funny", q: "What's the most embarrassing thing you've done to impress someone?" },
+  { id: "c2", cat: "funny", q: "If our relationship was a Nollywood film, what would the title be?" },
+  { id: "c3", cat: "funny", q: "Which of my habits would you report to customer service?" },
+  { id: "c4", cat: "funny", q: "What animal am I most like in the morning?" },
+  { id: "c5", cat: "funny", q: "What would your wrestling entrance song be?" },
+  { id: "c6", cat: "funny", q: "What's the weirdest food combo you secretly love?" },
+  { id: "c7", cat: "memories", q: "What moment did you realise you liked me?" },
+  { id: "c8", cat: "memories", q: "What's a tiny memory of us you replay often?" },
+  { id: "c9", cat: "memories", q: "What's the funniest thing that happened on one of our dates?" },
+  { id: "c10", cat: "memories", q: "Which photo of us do you love most and why?" },
+  { id: "c11", cat: "memories", q: "What's a childhood memory you've never told me?" },
+  { id: "c12", cat: "memories", q: "When did you feel most proud of me?" },
+  { id: "c13", cat: "future", q: "What does a perfect ordinary Tuesday look like for us in five years?" },
+  { id: "c14", cat: "future", q: "Which city should we live in for at least a year?" },
+  { id: "c15", cat: "future", q: "What's one tradition you want us to start?" },
+  { id: "c16", cat: "future", q: "What skill should we learn together?" },
+  { id: "c17", cat: "future", q: "Where should our first big trip be?" },
+  { id: "c18", cat: "future", q: "What would our dream home have that most homes don't?" },
+  { id: "c19", cat: "deep", q: "What's something you're still learning to forgive yourself for?" },
+  { id: "c20", cat: "deep", q: "When do you feel most like yourself?" },
+  { id: "c21", cat: "deep", q: "What's a fear you'd like me to understand better?" },
+  { id: "c22", cat: "deep", q: "What does feeling safe with someone mean to you?" },
+  { id: "c23", cat: "deep", q: "What's a belief you've changed your mind about?" },
+  { id: "c24", cat: "deep", q: "How can I support you better when you're stressed?" },
+  { id: "c25", cat: "romance", q: "What's something I do that makes you feel loved without me noticing?" },
+  { id: "c26", cat: "romance", q: "Describe your perfect date with me, in detail." },
+  { id: "c27", cat: "romance", q: "What song makes you think of us?" },
+  { id: "c28", cat: "romance", q: "What did you love about me first, and what do you love most now?" },
+  { id: "c29", cat: "romance", q: "Where would you love me to surprise you?" },
+  { id: "c30", cat: "romance", q: "What's a compliment you'd love to hear more often?" },
+];
+
+export const DAILY_QUESTIONS = [
+  "What made you smile today?",
+  "What's one thing you're grateful for about us this week?",
+  "If we could teleport anywhere for dinner tonight, where?",
+  "What's a song stuck in your head right now?",
+  "What's something small I could do tomorrow to make your day?",
+  "What are you looking forward to this month?",
+  "Describe your mood today as a weather forecast.",
+  "What's one thing you learned recently?",
+  "If today had a title, what would it be?",
+  "What's the best thing you ate this week?",
+  "Which memory of us would you put in a time capsule?",
+  "What's something you want to try together soon?",
+  "What's a compliment you received that you still think about?",
+  "What would your perfect lazy Sunday look like?",
+];
+
+export const DAILY_QUESTS = [
+  { id: "q1", title: "Three little thank-yous", task: "Write three things your partner did recently that you're thankful for." },
+  { id: "q2", title: "Song swap", task: "Share a song that feels like your partner, and say why." },
+  { id: "q3", title: "Tiny time capsule", task: "Describe today in one sentence for future-you-two to read." },
+  { id: "q4", title: "Date planner", task: "Plan a date under ₦10,000 — where, what, and the snack." },
+  { id: "q5", title: "Then and now", task: "Name something about your partner you noticed at the start, and something you love now." },
+  { id: "q6", title: "Compliment storm", task: "Write five compliments in five words or fewer each." },
+  { id: "q7", title: "Bucket list duo", task: "Add one adventure to our shared bucket list." },
+  { id: "q8", title: "Sweet nothing", task: "Write the sweetest text you can in exactly ten words." },
+  { id: "q9", title: "Comfort kit", task: "List three things that comfort you when you're sad, so your partner knows." },
+  { id: "q10", title: "Inside joke archive", task: "Write down an inside joke and how it started." },
+];
