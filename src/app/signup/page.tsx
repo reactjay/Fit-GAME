@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { AuthForm } from "@/components/auth/auth-form";
 import { AuthFrame, NightScene } from "@/components/auth/scene";
@@ -5,6 +6,26 @@ import { AuthFrame, NightScene } from "@/components/auth/scene";
 export const metadata = { title: "Sign up" };
 
 export default function Page() {
+  if (process.env.REGISTRATION_CLOSED === "true") {
+    return (
+      <AuthFrame>
+        <NightScene compact />
+        <h1 className="mt-4 text-center font-display text-3xl">Private Space</h1>
+        <p className="mb-6 mt-2 text-center text-sm text-ink-soft">
+          Registration is closed. If you already have an account, please sign in below.
+        </p>
+        <div className="card p-6 text-center">
+          <Link
+            href="/login"
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-rose font-semibold text-white shadow-md hover:brightness-110"
+          >
+            Sign in to your world
+          </Link>
+        </div>
+      </AuthFrame>
+    );
+  }
+
   return (
     <AuthFrame>
       <NightScene compact />

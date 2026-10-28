@@ -12,6 +12,9 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   if (!sameOrigin(req)) return fail("Cross-site request blocked", 403);
+  if (process.env.REGISTRATION_CLOSED === "true") {
+    return fail("Registration is closed. This space is private.", 403);
+  }
   if (!throttle(`signup:${req.headers.get("x-forwarded-for") ?? "local"}`, 10, 60 * 60_000)) return fail("Too many attempts. Try again later.", 429);
   const parsed = schema.safeParse(await body(req));
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Check the form and try again.");
