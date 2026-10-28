@@ -1,12 +1,36 @@
+import { constellationOfUs } from "./constellation-of-us";
+import { crownAndKingdom } from "./crown-and-kingdom";
+import { futureTense } from "./future-tense";
+import { lagosToDelta } from "./lagos-to-delta";
 import { lanternRealm } from "./lantern-realm";
+import { marketHeist } from "./market-heist";
+import { midnightLekki } from "./midnight-lekki";
+import { parisInterlude } from "./paris-interlude";
 import { perfectDay } from "./perfect-day";
+import { rainySunday } from "./rainy-sunday";
+import { starlitLagoon } from "./starlit-lagoon";
 import { thirdMainland } from "./third-mainland";
+import { thousandLetters } from "./thousand-letters";
 import type { Story } from "./types";
 
 export type { Story, StoryNode, SceneKey } from "./types";
 
-// Register new stories here.
-export const STORIES: Story[] = [thirdMainland, lanternRealm, perfectDay];
+// Register all couple stories here.
+export const STORIES: Story[] = [
+  lagosToDelta,
+  midnightLekki,
+  rainySunday,
+  starlitLagoon,
+  thousandLetters,
+  crownAndKingdom,
+  parisInterlude,
+  marketHeist,
+  futureTense,
+  constellationOfUs,
+  thirdMainland,
+  lanternRealm,
+  perfectDay,
+];
 
 export function getStory(id: string) {
   return STORIES.find((s) => s.id === id) ?? null;

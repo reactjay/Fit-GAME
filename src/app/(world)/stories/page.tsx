@@ -50,7 +50,7 @@ export default function StoriesPage() {
           );
         })}
       </div>
-      <p className="mt-6 text-center text-xs text-ink-faint">More stories can be added in src/content/stories — no code changes needed beyond registering them.</p>
+      <p className="mt-6 text-center text-xs text-ink-faint">Every chapter written with love for you two 💞</p>
     </>
   );
 }
