@@ -14,7 +14,7 @@ grant authenticated to current_user;
 
 create schema if not exists auth;
 
-create table auth.users (
+create table if not exists auth.users (
   id uuid primary key default gen_random_uuid(),
   email text not null check (email ~ '^[^@\s]+@[^@\s]+$' and char_length(email) <= 254),
   password_hash text not null,
@@ -22,10 +22,10 @@ create table auth.users (
   created_at timestamptz not null default now(),
   last_sign_in_at timestamptz
 );
-create unique index users_email_key on auth.users (lower(email));
+create unique index if not exists users_email_key on auth.users (lower(email));
 
 -- Only a SHA-256 hash of each session token is stored.
-create table auth.sessions (
+create table if not exists auth.sessions (
   token_hash text primary key,
   user_id uuid not null references auth.users (id) on delete cascade,
   created_at timestamptz not null default now(),
@@ -33,7 +33,7 @@ create table auth.sessions (
   last_seen_at timestamptz not null default now(),
   user_agent text
 );
-create index sessions_user_idx on auth.sessions (user_id);
+create index if not exists sessions_user_idx on auth.sessions (user_id);
 
 create or replace function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid;

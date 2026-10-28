@@ -18,6 +18,19 @@ const client = new pg.Client({ connectionString: url, ssl: /sslmode=require/.tes
 await client.connect();
 try {
   await client.query("create table if not exists public.schema_migrations (name text primary key, applied_at timestamptz not null default now())");
+  
+  // Self-healing: if core tables are missing (e.g. after a partial DB wipe or drop),
+  // reset schema_migrations so all required tables and roles are created.
+  const check = await client.query(`
+    select 
+      exists(select 1 from information_schema.tables where table_schema = 'auth' and table_name = 'sessions') as has_sessions,
+      exists(select 1 from information_schema.tables where table_schema = 'public' and table_name = 'worlds') as has_worlds
+  `);
+  if (!check.rows[0]?.has_sessions || !check.rows[0]?.has_worlds) {
+    console.log("ℹ️ Core tables missing or database was wiped. Re-running all migrations...");
+    await client.query("delete from public.schema_migrations");
+  }
+
   const done = new Set((await client.query("select name from public.schema_migrations")).rows.map((r) => r.name));
   for (const file of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
     if (done.has(file)) continue;

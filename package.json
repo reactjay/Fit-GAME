@@ -11,6 +11,7 @@
     "test": "vitest run src",
     "test:db": "vitest run db/tests",
     "migrate": "node scripts/migrate.mjs",
+    "db:wipe": "node scripts/wipe-db.mjs",
     "reset-password": "node scripts/reset-password.mjs",
     "seed:demo": "node scripts/seed-demo.mjs"
   },
