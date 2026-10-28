@@ -78,3 +78,6 @@ export const IconPause = make(<path d="M7 4h3v16H7zM14 4h3v16h-3z" fill="current
 export const IconStop = make(<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />);
 export const IconRetry = make(<path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5" />);
 export const IconEdit = make(<path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" />);
+export const IconMinimize = make(<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7" />);
+export const IconMaximize = make(<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />);
+

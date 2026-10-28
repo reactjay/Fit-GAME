@@ -105,7 +105,8 @@ export function VoicePlayer({ path, durationMs, mine }: { path: string | null; d
       <button
         aria-label={playing ? "Pause voice note" : "Play voice note"}
         disabled={!url || error}
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           const a = audio.current;
           if (!a) return;
           if (a.paused) a.play().catch(() => setError(true));

@@ -278,6 +278,7 @@ export function ChatView() {
                   replied={msg.reply_to ? byId.get(msg.reply_to) : undefined}
                   seen={Boolean(lastMine?.client_id === msg.client_id && partnerRead && partnerRead >= msg.created_at)}
                   onActions={() => !msg._status && setActionFor(msg)}
+                  onReply={() => !msg._status && setReplyTo(msg)}
                   onRetry={() => retry(msg)}
                   onReact={(emoji) => api.rpc("toggle_reaction", { p_message: msg.id, p_emoji: emoji }).then(({ error }) => error && toast("Couldn't react — try again.", "error"))}
                 />
@@ -406,6 +407,7 @@ function Bubble({
   replied,
   seen,
   onActions,
+  onReply,
   onRetry,
   onReact,
 }: {
@@ -415,12 +417,72 @@ function Bubble({
   replied?: Local;
   seen: boolean;
   onActions: () => void;
+  onReply: () => void;
   onRetry: () => void;
   onReact: (emoji: string) => void;
 }) {
   const { me } = useWorld();
-  const press = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [offsetX, setOffsetX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const wasSwipedRef = useRef(false);
+  const didHapticRef = useRef(false);
   const reactions = Object.entries(msg.reactions ?? {}).filter(([, users]) => users.length);
+  const deleted = Boolean(msg.deleted_at);
+
+  const SWIPE_THRESHOLD = 48;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (deleted || msg._status) return;
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+    wasSwipedRef.current = false;
+    didHapticRef.current = false;
+    setIsSwiping(false);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || deleted || msg._status) return;
+    const t = e.touches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+
+    // Forward swipe (swiping right)
+    if (dx > 6 && Math.abs(dx) > Math.abs(dy)) {
+      wasSwipedRef.current = true;
+      setIsSwiping(true);
+      const clamped = Math.min(Math.max(dx * 0.65, 0), 80);
+      setOffsetX(clamped);
+
+      if (clamped >= SWIPE_THRESHOLD && !didHapticRef.current) {
+        didHapticRef.current = true;
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+          navigator.vibrate(15);
+        }
+      }
+    }
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartRef.current) return;
+    touchStartRef.current = null;
+    setIsSwiping(false);
+
+    if (offsetX >= SWIPE_THRESHOLD) {
+      sfx.pop();
+      onReply();
+    }
+    setOffsetX(0);
+    setTimeout(() => {
+      wasSwipedRef.current = false;
+    }, 120);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (wasSwipedRef.current || deleted || msg._status) return;
+    // Tapping on the message opens the reactions and options sheet!
+    onActions();
+  };
 
   if (msg.kind === "call") {
     const info = safeJson<{ kind: string; status: string; secs: number }>(msg.body);
@@ -447,21 +509,44 @@ function Bubble({
     );
   }
 
-  const deleted = Boolean(msg.deleted_at);
   return (
     <div className={cn("flex flex-col", mine ? "items-end" : "items-start", grouped ? "mt-0.5" : "mt-3")}>
-      <div className="group flex max-w-[82%] items-end gap-1.5 sm:max-w-[70%]">
+      <div className="group relative flex max-w-[82%] items-end gap-1.5 sm:max-w-[70%]">
+        {/* Forward-swipe reply icon indicator */}
+        <div
+          style={{
+            opacity: Math.min(offsetX / (SWIPE_THRESHOLD * 0.7), 1),
+            transform: `scale(${Math.min(0.4 + (offsetX / SWIPE_THRESHOLD) * 0.65, 1.15)})`,
+            transition: isSwiping ? "none" : "all 0.22s ease-out",
+          }}
+          className={cn(
+            "pointer-events-none absolute -left-8 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full text-xs transition-colors",
+            offsetX >= SWIPE_THRESHOLD ? "bg-rose text-white shadow-sm" : "bg-surface-2 text-ink-faint"
+          )}
+          aria-hidden="true"
+        >
+          <IconReply size={13} />
+        </div>
+
         <button
           type="button"
-          onClick={(e) => e.detail === 0 && onActions()}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchEnd}
+          onClick={handleClick}
           onDoubleClick={() => !deleted && onReact("❤️")}
-          onContextMenu={(e) => (e.preventDefault(), onActions())}
-          onTouchStart={() => (press.current = setTimeout(onActions, 450))}
-          onTouchEnd={() => press.current && clearTimeout(press.current)}
-          onTouchMove={() => press.current && clearTimeout(press.current)}
-          aria-label="Message options (long-press or right-click)"
+          onContextMenu={(e) => {
+            e.preventDefault();
+            onActions();
+          }}
+          aria-label="Message options (tap to react or swipe forward to reply)"
+          style={{
+            transform: `translate3d(${offsetX}px, 0, 0)`,
+            transition: isSwiping ? "none" : "transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+          }}
           className={cn(
-            "relative select-text overflow-hidden text-left text-[15px] leading-snug",
+            "relative select-text overflow-hidden text-left text-[15px] leading-snug transition-transform active:scale-[0.98]",
             msg.kind === "image" ? "rounded-2xl p-1" : "rounded-[20px] px-3.5 py-2",
             mine ? "rounded-br-md bg-[var(--bubble-me)] text-[var(--bubble-me-ink)]" : "rounded-bl-md bg-[var(--bubble-them)] text-ink",
             deleted && "bg-transparent italic text-ink-faint ring-1 ring-line",
@@ -538,8 +623,17 @@ function ChatImage({ msg }: { msg: Local }) {
     <>
       <span className="block w-60 max-w-full overflow-hidden rounded-xl bg-black/20 sm:w-72" style={{ aspectRatio: Math.min(Math.max(ratio, 0.6), 1.8) }}>
         {src ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={src} alt="Shared photo" loading="lazy" decoding="async" className="h-full w-full cursor-zoom-in object-cover" onClick={() => setOpen(true)} />
+          <img
+            src={src}
+            alt="Shared photo"
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full cursor-zoom-in object-cover"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(true);
+            }}
+          />
         ) : (
           <span className="grid h-full w-full place-items-center text-xs opacity-70">{failed ? "Photo unavailable" : <Spinner />}</span>
         )}
