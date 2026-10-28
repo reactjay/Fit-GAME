@@ -6,7 +6,7 @@ import { toast } from "@/components/ui/toast";
 import { parseMusicUrl } from "@/lib/music";
 import { db } from "@/lib/db/client";
 import type { MusicLink } from "@/lib/types";
-import { errorMessage, relativeTime } from "@/lib/utils";
+import { cn, errorMessage, relativeTime } from "@/lib/utils";
 import { useActivity, useWorld } from "@/lib/world-context";
 
 export default function MusicPage() {
@@ -81,14 +81,25 @@ export default function MusicPage() {
   );
 }
 
+import { useMusic } from "@/lib/music-context";
+
 function Track({ link, by, mine, onDelete }: { link: MusicLink; by: string; mine: boolean; onDelete: () => void }) {
   const info = parseMusicUrl(link.url);
-  const [play, setPlay] = useState(false);
+  const { activeTrack, play, stop, setMinimized } = useMusic();
+  const isPlayingThis = activeTrack?.url === link.url;
+
   return (
-    <article className="card p-4">
+    <article className={cn("card p-4 transition-all", isPlayingThis && "border-gold/60 bg-gold/5 shadow-md")}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <div className="text-xs font-semibold text-gold">{info?.provider}</div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gold">{info?.provider}</span>
+            {isPlayingThis && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-bold text-gold animate-pulse">
+                <span>🎵</span> Now Playing
+              </span>
+            )}
+          </div>
           <h3 className="font-display text-lg">{link.title}</h3>
           {link.note && <p className="text-sm text-ink-soft">{link.note}</p>}
           <p className="mt-1 text-xs text-ink-faint">
@@ -101,17 +112,38 @@ function Track({ link, by, mine, onDelete }: { link: MusicLink; by: string; mine
           </IconButton>
         )}
       </div>
-      <div className="mt-3">
+      <div className="mt-3 flex items-center gap-2">
         {info?.embed ? (
-          play ? (
-            <iframe src={info.embed} title={link.title} height={info.height} className="w-full rounded-xl border-0" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups allow-presentation" />
+          isPlayingThis ? (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="soft"
+                size="sm"
+                onClick={() => setMinimized(false)}
+                className="bg-gold/20 text-gold border-gold/30 hover:bg-gold/30"
+              >
+                🎶 View Player
+              </Button>
+              <Button variant="ghost" size="sm" onClick={stop} className="text-rose hover:bg-rose/10">
+                Stop
+              </Button>
+            </div>
           ) : (
-            <Button variant="soft" size="sm" onClick={() => setPlay(true)}>
-              ▶ Load player
+            <Button
+              variant="soft"
+              size="sm"
+              onClick={() => play({ id: link.id, url: link.url, title: link.title, note: link.note })}
+            >
+              ▶ Play anywhere
             </Button>
           )
         ) : (
-          <a href={link.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center rounded-full bg-surface-2 px-3.5 text-sm font-semibold">
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-9 items-center rounded-full bg-surface-2 px-3.5 text-sm font-semibold hover:bg-line transition"
+          >
             Open in {info?.provider ?? "app"} ↗
           </a>
         )}

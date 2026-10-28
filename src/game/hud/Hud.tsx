@@ -1269,10 +1269,13 @@ async function takePhoto(worldId: string, userId: string) {
   }
 }
 
+import { useMusic } from "@/lib/music-context";
+
 function MusicPanel() {
-  const [url, setUrl] = useState("https://audiomack.com/asake/song/active");
+  const music = useMusic();
   const [inputVal, setInputVal] = useState("");
-  const info = parseMusicUrl(url);
+  const activeUrl = music.activeTrack?.url ?? "https://audiomack.com/asake/song/active";
+  const info = parseMusicUrl(activeUrl);
 
   const presets = [
     { title: "Asake - Active", url: "https://audiomack.com/asake/song/active", artist: "Asake ft. Travis Scott" },
@@ -1291,7 +1294,7 @@ function MusicPanel() {
       toastHud("Paste a valid Audiomack, Spotify, or YouTube link");
       return;
     }
-    setUrl(inputVal.trim());
+    music.play({ url: inputVal.trim(), title: "Custom Song" });
     setInputVal("");
   };
 
@@ -1329,21 +1332,21 @@ function MusicPanel() {
           type="submit"
           className="rounded-lg bg-[#f59e0b] px-3 py-1.5 font-bold text-black active:scale-95 transition"
         >
-          Play
+          Play Everywhere
         </button>
       </form>
 
       {/* Trending Afrobeats Presets */}
       <div>
-        <div className="mb-1.5 font-bold uppercase tracking-wider text-white/50 text-[10px]">Trending Hits</div>
+        <div className="mb-1.5 font-bold uppercase tracking-wider text-white/50 text-[10px]">Trending Hits (Plays Everywhere)</div>
         <div className="grid grid-cols-2 gap-1.5">
           {presets.map((p) => (
             <button
               key={p.title}
-              onClick={() => setUrl(p.url)}
+              onClick={() => music.play({ url: p.url, title: p.title })}
               className={cn(
                 "flex flex-col items-start rounded-lg border p-2 text-left transition active:scale-95",
-                url === p.url ? "border-[#f59e0b] bg-[#f59e0b]/15 text-white" : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                music.activeTrack?.url === p.url ? "border-[#f59e0b] bg-[#f59e0b]/20 text-white shadow-sm" : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
               )}
             >
               <span className="font-semibold truncate w-full">{p.title}</span>

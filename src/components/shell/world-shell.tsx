@@ -49,14 +49,20 @@ const SECONDARY = [
   { href: "/settings", label: "Settings", icon: IconSettings },
 ];
 
+import { GlobalMusicPlayer } from "@/components/music/global-player";
+import { MusicProvider } from "@/lib/music-context";
+
 export function WorldShell(props: { world: World; me: Profile; partner: Profile | null; role: "creator" | "partner"; prefs: Preferences; children: ReactNode }) {
   return (
     <WorldProvider world={props.world} me={props.me} partner={props.partner} role={props.role} prefs={props.prefs}>
       <CallProvider>
-        <Frame>{props.children}</Frame>
-        <CallScreen />
-        <BurstLayer />
-        <MessageWatcher />
+        <MusicProvider>
+          <Frame>{props.children}</Frame>
+          <GlobalMusicPlayer />
+          <CallScreen />
+          <BurstLayer />
+          <MessageWatcher />
+        </MusicProvider>
       </CallProvider>
     </WorldProvider>
   );
