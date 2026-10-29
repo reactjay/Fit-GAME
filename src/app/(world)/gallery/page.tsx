@@ -8,18 +8,18 @@ import { db } from "@/lib/db/client";
 import { errorMessage, relativeTime } from "@/lib/utils";
 import { useActivity, useWorld } from "@/lib/world-context";
 
-type MediaRow = { id: string; path: string; kind: "image" | "voice"; uploader_id: string; duration_ms: number | null; created_at: string };
+type MediaRow = { id: string; path: string; kind: "image" | "video" | "voice"; uploader_id: string; duration_ms: number | null; created_at: string };
 const PAGE = 36;
 
 export default function GalleryPage() {
   useActivity("Browsing the gallery 🖼️");
   const { world, nameOf } = useWorld();
-  const [tab, setTab] = useState<"image" | "voice">("image");
+  const [tab, setTab] = useState<"image" | "video" | "voice">("image");
   const [items, setItems] = useState<MediaRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [more, setMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewing, setViewing] = useState<string | null>(null);
+  const [viewing, setViewing] = useState<{ path: string; isVideo?: boolean } | null>(null);
 
   const load = useCallback(
     async (before?: string) => {
@@ -43,22 +43,46 @@ export default function GalleryPage() {
 
   return (
     <>
-      <PageHeader title="Shared gallery" subtitle="Every photo and voice note you've shared, kept private to you two." />
-      <Tabs value={tab} onChange={setTab} items={[{ id: "image", label: "Photos" }, { id: "voice", label: "Voice notes" }]} />
+      <PageHeader title="Shared gallery" subtitle="Every photo, video, and voice note you've shared, kept private to you two." />
+      <Tabs
+        value={tab}
+        onChange={setTab}
+        items={[
+          { id: "image", label: "Photos" },
+          { id: "video", label: "Videos" },
+          { id: "voice", label: "Voice notes" },
+        ]}
+      />
       {error && <ErrorNote onRetry={() => load()}>{error}</ErrorNote>}
       {!loading && !error && items.length === 0 && (
-        <EmptyState emoji={tab === "image" ? "📷" : "🎙️"} title={tab === "image" ? "No photos yet" : "No voice notes yet"}>
-          Share them in the chat or the Memory Vault and they&apos;ll gather here.
+        <EmptyState
+          emoji={tab === "image" ? "📷" : tab === "video" ? "📹" : "🎙️"}
+          title={tab === "image" ? "No photos yet" : tab === "video" ? "No videos yet" : "No voice notes yet"}
+        >
+          Share them in the chat and they&apos;ll gather here.
         </EmptyState>
       )}
       {tab === "image" ? (
         <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
           {items.map((m) => (
-            <button key={m.id} onClick={() => setViewing(m.path)} className="aspect-square overflow-hidden rounded-xl" aria-label={`Photo from ${nameOf(m.uploader_id)}`}>
+            <button key={m.id} onClick={() => setViewing({ path: m.path, isVideo: false })} className="aspect-square overflow-hidden rounded-xl" aria-label={`Photo from ${nameOf(m.uploader_id)}`}>
               <PrivateImage path={m.path} alt="" className="h-full w-full transition hover:scale-105" />
             </button>
           ))}
           {loading && Array.from({ length: 9 }, (_, i) => <div key={i} className="skeleton aspect-square" />)}
+        </div>
+      ) : tab === "video" ? (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {items.map((m) => (
+            <VideoThumbnail
+              key={m.id}
+              path={m.path}
+              uploaderName={nameOf(m.uploader_id)}
+              createdAt={m.created_at}
+              onClick={() => setViewing({ path: m.path, isVideo: true })}
+            />
+          ))}
+          {loading && Array.from({ length: 6 }, (_, i) => <div key={i} className="skeleton aspect-video rounded-xl" />)}
         </div>
       ) : (
         <div className="space-y-2">
@@ -82,18 +106,53 @@ export default function GalleryPage() {
           </Button>
         </div>
       )}
-      {viewing && <Viewer path={viewing} onClose={() => setViewing(null)} />}
+      {viewing && <Viewer path={viewing.path} isVideo={viewing.isVideo} onClose={() => setViewing(null)} />}
     </>
   );
 }
 
-function Viewer({ path, onClose }: { path: string; onClose: () => void }) {
+function VideoThumbnail({ path, uploaderName, createdAt, onClick }: { path: string; uploaderName: string; createdAt: string; onClick: () => void }) {
   const { url } = useSignedUrl(path);
   return (
-    <div className="fixed inset-0 z-[90] grid place-items-center bg-black/90 p-4" onClick={onClose} role="dialog" aria-label="Photo">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      {url && <img src={url} alt="Shared photo, full size" className="max-h-full max-w-full rounded-xl object-contain" />}
-      <button className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] h-11 w-11 rounded-full bg-white/15 text-white" aria-label="Close">
+    <button
+      onClick={onClick}
+      className="group relative aspect-video w-full overflow-hidden rounded-xl bg-black/40 text-left transition hover:ring-2 hover:ring-rose"
+      aria-label={`Video from ${uploaderName}`}
+    >
+      {url ? (
+        <video src={url} preload="metadata" className="h-full w-full object-cover" />
+      ) : (
+        <div className="skeleton h-full w-full" />
+      )}
+      <div className="absolute inset-0 grid place-items-center bg-black/25 transition group-hover:bg-black/40">
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-white/80 text-black shadow transition group-hover:scale-110">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="ml-0.5 h-5 w-5">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      </div>
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 text-[11px] text-white">
+        <p className="truncate font-medium">{uploaderName}</p>
+        <p className="text-white/70 text-[10px]">{relativeTime(createdAt)}</p>
+      </div>
+    </button>
+  );
+}
+
+function Viewer({ path, isVideo, onClose }: { path: string; isVideo?: boolean; onClose: () => void }) {
+  const { url } = useSignedUrl(path);
+  const isVid = isVideo || /\.(mp4|webm|mov)$/i.test(path);
+  return (
+    <div className="fixed inset-0 z-[90] grid place-items-center bg-black/90 p-4" onClick={onClose} role="dialog" aria-label="Media preview">
+      {url && (isVid ? (
+        <div className="relative max-h-full max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+          <video src={url} controls autoPlay playsInline className="max-h-[85vh] w-full rounded-xl object-contain bg-black shadow-2xl" />
+        </div>
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img src={url} alt="Shared photo, full size" className="max-h-full max-w-full rounded-xl object-contain" />
+      ))}
+      <button className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-lg font-bold text-white hover:bg-white/25" aria-label="Close">
         ✕
       </button>
     </div>

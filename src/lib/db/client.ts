@@ -171,7 +171,7 @@ export async function requestUpload(worldId: string, mime: string, size: number)
   return post<{ path: string; url: string; headers: Record<string, string> }>("/api/media/upload", { worldId, mime, size });
 }
 
-export async function completeUpload(p: { path: string; kind: "image" | "voice"; width?: number; height?: number; duration_ms?: number }) {
+export async function completeUpload(p: { path: string; kind: "image" | "video" | "voice"; width?: number; height?: number; duration_ms?: number }) {
   return post<{ path: string }>("/api/media/complete", p);
 }
 

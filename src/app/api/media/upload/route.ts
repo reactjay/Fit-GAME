@@ -8,6 +8,9 @@ const EXT: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
   "image/gif": "gif",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
   "audio/webm": "webm",
   "audio/ogg": "ogg",
   "audio/mp4": "m4a",
@@ -24,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return fail("Invalid upload");
     const { worldId, mime, size } = parsed.data;
     if (!ALLOWED.has(mime)) return fail("That file type isn't supported.");
-    if (size > MAX_BYTES) return fail("That file is over 10 MB. Try a smaller one.");
+    if (size > MAX_BYTES) return fail("That file is over 50 MB. Try a smaller one.");
     if (!(await isMember(user.id, worldId))) return fail("You don't have access to that.", 403);
     const path = `${worldId}/${crypto.randomUUID()}.${EXT[mime]}`;
     return json({ path, ...(await uploadTarget(path, mime)) });

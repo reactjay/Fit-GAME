@@ -6,7 +6,7 @@ import { ALLOWED, MAX_BYTES, deleteObjects, headObject, isMember, worldOfPath } 
 
 const schema = z.object({
   path: z.string().max(200),
-  kind: z.enum(["image", "voice"]),
+  kind: z.enum(["image", "video", "voice"]),
   width: z.number().int().positive().max(20000).nullish(),
   height: z.number().int().positive().max(20000).nullish(),
   duration_ms: z.number().int().positive().max(60 * 60_000).nullish(),
@@ -22,10 +22,16 @@ export async function POST(req: NextRequest) {
     if (!world || !(await isMember(user.id, world))) return fail("You don't have access to that.", 403);
     const head = await headObject(path);
     if (!head) return fail("The upload didn't arrive. Please retry.", 409);
-    const typeOk = ALLOWED.has(head.type) && (kind === "image" ? head.type.startsWith("image/") : head.type.startsWith("audio/"));
+    const typeOk =
+      ALLOWED.has(head.type) &&
+      (kind === "image"
+        ? head.type.startsWith("image/")
+        : kind === "video"
+          ? head.type.startsWith("video/")
+          : head.type.startsWith("audio/"));
     if (head.size > MAX_BYTES || head.size === 0 || !typeOk) {
       await deleteObjects([path]);
-      return fail(head.size > MAX_BYTES ? "That file is over 10 MB." : "That file type isn't supported.");
+      return fail(head.size > MAX_BYTES ? "That file is over 50 MB." : "That file type isn't supported.");
     }
     await asUser(user.id, (c) =>
       c.query(

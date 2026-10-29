@@ -12,7 +12,9 @@ describe("media validation", () => {
     expect(validateMedia({ type: "image/svg+xml", size: 10 }, "image")).toMatch(/JPG/);
     expect(validateMedia({ type: "audio/webm", size: 10 }, "image")).toMatch(/JPG/);
     expect(validateMedia({ type: "image/png", size: 0 }, "image")).toMatch(/empty/);
-    expect(validateMedia({ type: "image/png", size: 11 * 1024 * 1024 }, "image")).toMatch(/10 MB/);
+    expect(validateMedia({ type: "video/mp4", size: 1000 }, "video")).toBeNull();
+    expect(validateMedia({ type: "video/avi", size: 10 }, "video")).toMatch(/MP4, WebM or MOV/);
+    expect(validateMedia({ type: "image/png", size: 51 * 1024 * 1024 }, "image")).toMatch(/50 MB/);
   });
   it("puts files under the world's folder", () => {
     expect(storagePath("w1", "image/png")).toMatch(/^w1\/[0-9a-f-]{36}\.png$/);

@@ -11,11 +11,13 @@ export async function uploadMedia(opts: {
   worldId: string;
   userId: string;
   blob: Blob;
-  kind: "image" | "voice";
+  kind: "image" | "video" | "voice";
   meta?: { width?: number; height?: number; duration_ms?: number };
   onProgress?: (f: number) => void;
 }) {
-  const mime = baseMime(opts.blob.type || (opts.kind === "voice" ? "audio/webm" : "image/jpeg"));
+  const mime = baseMime(
+    opts.blob.type || (opts.kind === "voice" ? "audio/webm" : opts.kind === "video" ? "video/mp4" : "image/jpeg"),
+  );
   const invalid = validateMedia({ type: mime, size: opts.blob.size }, opts.kind);
   if (invalid) throw new Error(invalid);
   const target = await requestUpload(opts.worldId, mime, opts.blob.size);

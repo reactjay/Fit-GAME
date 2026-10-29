@@ -9,6 +9,7 @@ import { compressImage, validateMedia } from "@/lib/media";
 import { db, deleteMedia } from "@/lib/db/client";
 import type { Memory, MemoryKind, Message } from "@/lib/types";
 import { uploadMedia } from "@/lib/upload";
+import { useSignedUrl } from "@/lib/signed-urls";
 import { cn, errorMessage, formatDuration, relativeTime, timeLabel } from "@/lib/utils";
 import { useActivity, useWorld } from "@/lib/world-context";
 
@@ -112,7 +113,15 @@ export default function VaultPage() {
                 <div className="text-xs text-ink-faint">
                   {nameOf(f.sender_id)} · {new Date(f.created_at).toLocaleDateString()} {timeLabel(f.created_at)}
                 </div>
-                {f.kind === "image" ? <PrivateImage path={f.media_path} alt="Favourite photo" className="mt-2 h-40 w-full rounded-xl" /> : f.kind === "voice" ? <VoicePlayer path={f.media_path} durationMs={f.media_meta?.duration_ms} /> : <p className="mt-1 whitespace-pre-wrap">{f.body}</p>}
+                {f.kind === "image" ? (
+                  <PrivateImage path={f.media_path} alt="Favourite photo" className="mt-2 h-40 w-full rounded-xl" />
+                ) : f.kind === "video" ? (
+                  <VaultVideo path={f.media_path} />
+                ) : f.kind === "voice" ? (
+                  <VoicePlayer path={f.media_path} durationMs={f.media_meta?.duration_ms} />
+                ) : (
+                  <p className="mt-1 whitespace-pre-wrap">{f.body}</p>
+                )}
               </div>
             ))}
           </div>
@@ -345,4 +354,11 @@ function MemoryEditor({ initial, onClose, onSaved }: { initial: Partial<Memory> 
       </form>
     </Sheet>
   );
+}
+
+function VaultVideo({ path }: { path: string | null }) {
+  const { url, failed } = useSignedUrl(path);
+  if (failed) return <div className="mt-2 rounded-xl bg-black/20 p-4 text-center text-xs text-ink-faint">Video unavailable</div>;
+  if (!url) return <div className="skeleton mt-2 h-40 w-full rounded-xl" />;
+  return <video src={url} controls playsInline className="mt-2 max-h-60 w-full rounded-xl bg-black object-contain shadow" />;
 }

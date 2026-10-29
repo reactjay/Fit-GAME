@@ -182,7 +182,7 @@ export function ChatView() {
       if (!local._blob) return;
       upsert([{ ...local, _status: "uploading", _progress: 0 }]);
       try {
-        const kind = local.kind === "voice" ? "voice" : "image";
+        const kind = local.kind === "voice" ? "voice" : local.kind === "video" ? "video" : "image";
         const { path } = await uploadMedia({
           worldId: world.id,
           userId: me.id,
@@ -234,9 +234,15 @@ export function ChatView() {
 
   const retry = (msg: Local) => (msg._blob && !msg.media_path ? sendMedia(msg) : insertMessage({ ...msg, _status: "sending" }));
 
-  const onPickImage = async (file: File) => {
+  const onPickMedia = async (file: File) => {
+    if (file.type.startsWith("video/")) {
+      const invalid = validateMedia(file, "video");
+      if (invalid) return toast(invalid, "error");
+      send({ kind: "video", _blob: file, _localUrl: URL.createObjectURL(file), media_meta: {} });
+      return;
+    }
     const invalid = validateMedia(file, "image");
-    if (invalid && !/10 MB/.test(invalid)) return toast(invalid, "error");
+    if (invalid && !/50 MB/.test(invalid)) return toast(invalid, "error");
     const { blob, width, height } = await compressImage(file);
     const stillInvalid = validateMedia({ type: blob.type || file.type, size: blob.size }, "image");
     if (stillInvalid) return toast(stillInvalid, "error");
@@ -244,7 +250,6 @@ export function ChatView() {
   };
 
   const byId = useMemo(() => new Map(messages.map((x) => [x.id, x])), [messages]);
-  const lastMine = useMemo(() => [...messages].reverse().find((x) => x.sender_id === me.id && !x._status && x.kind !== "call"), [messages, me.id]);
 
   return (
     <div className="flex h-[calc(100dvh-3.5rem-4rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col md:h-[calc(100dvh-3.5rem)]">
@@ -276,7 +281,7 @@ export function ChatView() {
                   mine={msg.sender_id === me.id}
                   grouped={Boolean(grouped)}
                   replied={msg.reply_to ? byId.get(msg.reply_to) : undefined}
-                  seen={Boolean(lastMine?.client_id === msg.client_id && partnerRead && partnerRead >= msg.created_at)}
+                  seen={Boolean(partnerRead && partnerRead >= msg.created_at)}
                   onActions={() => !msg._status && setActionFor(msg)}
                   onReply={() => !msg._status && setReplyTo(msg)}
                   onRetry={() => retry(msg)}
@@ -308,7 +313,7 @@ export function ChatView() {
         onCancelReply={() => setReplyTo(null)}
         onSendText={(body) => send({ kind: "text", body })}
         onSendVoice={(blob, ms) => send({ kind: "voice", _blob: blob, media_meta: { duration_ms: ms } })}
-        onPickImage={onPickImage}
+        onPickMedia={onPickMedia}
         onGift={(id) => send({ kind: "gift", body: id })}
         onTyping={() => broadcast("typing", {})}
       />
@@ -547,20 +552,22 @@ function Bubble({
           }}
           className={cn(
             "relative select-text overflow-hidden text-left text-[15px] leading-snug transition-transform active:scale-[0.98]",
-            msg.kind === "image" ? "rounded-2xl p-1" : "rounded-[20px] px-3.5 py-2",
+            msg.kind === "image" || msg.kind === "video" ? "rounded-2xl p-1" : "rounded-[20px] px-3.5 py-2",
             mine ? "rounded-br-md bg-[var(--bubble-me)] text-[var(--bubble-me-ink)]" : "rounded-bl-md bg-[var(--bubble-them)] text-ink",
             deleted && "bg-transparent italic text-ink-faint ring-1 ring-line",
           )}
         >
           {replied && !deleted && (
             <span className={cn("mb-1.5 block truncate rounded-xl border-l-2 px-2 py-1 text-xs", mine ? "border-black/30 bg-black/10" : "border-rose bg-white/5")}>
-              {replied.deleted_at ? "Unsent message" : replied.kind === "image" ? "📷 Photo" : replied.kind === "voice" ? "🎙️ Voice note" : replied.body}
+              {replied.deleted_at ? "Unsent message" : replied.kind === "image" ? "📷 Photo" : replied.kind === "video" ? "📹 Video" : replied.kind === "voice" ? "🎙️ Voice note" : replied.body}
             </span>
           )}
           {deleted ? (
             "Message unsent"
           ) : msg.kind === "image" ? (
             <ChatImage msg={msg} />
+          ) : msg.kind === "video" ? (
+            <ChatVideo msg={msg} />
           ) : msg.kind === "voice" ? (
             <VoicePlayer path={msg.media_path} durationMs={msg.media_meta?.duration_ms} mine={mine} />
           ) : (
@@ -601,16 +608,34 @@ function Bubble({
         ) : msg._status === "sending" ? (
           "Sending…"
         ) : (
-          !grouped || seen ? (
-            <>
-              {msg.starred_by?.length > 0 && "⭐"}
-              {timeLabel(msg.created_at)}
-              {mine && (seen ? " · Seen" : " · Delivered")}
-            </>
-          ) : null
+          <>
+            {msg.starred_by?.length > 0 && "⭐"}
+            <span>{timeLabel(msg.created_at)}</span>
+            {mine && <Ticks read={seen} />}
+          </>
         )}
       </div>
     </div>
+  );
+}
+
+function Ticks({ read }: { read: boolean }) {
+  if (read) {
+    return (
+      <span className="inline-flex items-center text-[#38bdf8]" title="Read" aria-label="Read">
+        <svg viewBox="0 0 16 11" className="h-3 w-3.5 fill-none stroke-current stroke-[2] stroke-linecap-round stroke-linejoin-round">
+          <path d="M1 5.5l3.5 3.5L11 1" />
+          <path d="M5 5.5l3.5 3.5L15 1" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center text-ink-faint" title="Delivered" aria-label="Delivered">
+      <svg viewBox="0 0 12 11" className="h-3 w-2.5 fill-none stroke-current stroke-[2] stroke-linecap-round stroke-linejoin-round">
+        <path d="M1 5.5l3.5 3.5L11 1" />
+      </svg>
+    </span>
   );
 }
 
@@ -648,6 +673,74 @@ function ChatImage({ msg }: { msg: Local }) {
   );
 }
 
+function ChatVideo({ msg }: { msg: Local }) {
+  const { url, failed } = useSignedUrl(msg._localUrl ? null : msg.media_path);
+  const src = msg._localUrl ?? url;
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <div className="relative w-64 max-w-full overflow-hidden rounded-xl bg-black/40 sm:w-72 aspect-video">
+        {src ? (
+          <div className="group/vid relative h-full w-full">
+            <video
+              src={src}
+              playsInline
+              preload="metadata"
+              controls
+              className="h-full w-full rounded-xl object-contain bg-black"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpen(true);
+              }}
+              aria-label="Expand video"
+              className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white opacity-0 transition group-hover/vid:opacity-100 hover:bg-black/80"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        ) : (
+          <div className="grid h-full w-full place-items-center text-xs opacity-70">
+            {failed ? "Video unavailable" : <Spinner />}
+          </div>
+        )}
+      </div>
+
+      {open && src && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/95 p-4"
+          onClick={() => setOpen(false)}
+          role="dialog"
+          aria-label="Video player"
+        >
+          <div className="relative max-h-full max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute -top-10 right-0 grid h-8 w-8 place-items-center rounded-full bg-white/20 text-white hover:bg-white/30 text-base font-bold"
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <video
+              src={src}
+              controls
+              autoPlay
+              playsInline
+              className="max-h-[80vh] w-full rounded-xl bg-black object-contain shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function safeJson<T>(s: string | null): T | null {
   try {
     return s ? (JSON.parse(s) as T) : null;
@@ -663,7 +756,7 @@ function Composer(props: {
   onCancelReply: () => void;
   onSendText: (body: string) => void;
   onSendVoice: (blob: Blob, ms: number) => void;
-  onPickImage: (file: File) => void;
+  onPickMedia: (file: File) => void;
   onGift: (id: string) => void;
   onTyping: () => void;
 }) {
@@ -712,7 +805,7 @@ function Composer(props: {
           <div className="mb-2 flex items-center gap-2 rounded-2xl bg-surface px-3 py-2 text-sm">
             <IconReply size={16} className="text-rose" />
             <span className="min-w-0 flex-1 truncate text-ink-soft">
-              Replying to {props.replyName}: {props.replyTo.kind === "text" ? props.replyTo.body : props.replyTo.kind === "image" ? "📷 Photo" : "🎙️ Voice note"}
+              Replying to {props.replyName}: {props.replyTo.kind === "text" ? props.replyTo.body : props.replyTo.kind === "image" ? "📷 Photo" : props.replyTo.kind === "video" ? "📹 Video" : "🎙️ Voice note"}
             </span>
             <button onClick={props.onCancelReply} aria-label="Cancel reply" className="h-8 w-8 rounded-full hover:bg-surface-2">
               ✕
@@ -731,7 +824,7 @@ function Composer(props: {
             />
           ) : (
             <>
-              <button aria-label="Send a photo" onClick={() => fileInput.current?.click()} className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-surface-2 hover:text-ink">
+              <button aria-label="Send photo or video" onClick={() => fileInput.current?.click()} className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-surface-2 hover:text-ink">
                 <IconImage />
               </button>
               <button aria-label="Send a gift" onClick={() => setGifts(true)} className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-ink-soft hover:bg-surface-2 hover:text-ink">
@@ -740,11 +833,11 @@ function Composer(props: {
               <input
                 ref={fileInput}
                 type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
+                accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
-                  if (f) props.onPickImage(f);
+                  if (f) props.onPickMedia(f);
                   e.target.value = "";
                 }}
               />

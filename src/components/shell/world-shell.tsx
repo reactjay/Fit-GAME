@@ -290,7 +290,14 @@ function MessageWatcher() {
         toast(`${nameOf(msg.sender_id)} sent you ${gift?.name ?? "a gift"} ${gift?.emoji ?? ""}`, "gold");
         return;
       }
-      const preview = msg.kind === "image" ? "📷 Photo" : msg.kind === "voice" ? "🎙️ Voice note" : (msg.body ?? "").slice(0, 80);
+      const preview =
+        msg.kind === "image"
+          ? "📷 Photo"
+          : msg.kind === "video"
+            ? "📹 Video"
+            : msg.kind === "voice"
+              ? "🎙️ Voice note"
+              : (msg.body ?? "").slice(0, 80);
       if (document.visibilityState === "visible") {
         sfx.pop();
         if (!path.startsWith("/chat")) toast(`${nameOf(msg.sender_id)}: ${preview}`);

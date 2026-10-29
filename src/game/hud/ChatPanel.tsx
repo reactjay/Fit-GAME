@@ -69,6 +69,8 @@ export function ChatPanel() {
                   <i className="opacity-60">Message unsent</i>
                 ) : m.kind === "image" ? (
                   <PrivateImage path={m.media_path} alt="Shared photo" className="h-32 w-44 rounded-lg" />
+                ) : m.kind === "video" ? (
+                  <span className="opacity-90">📹 Video</span>
                 ) : m.kind === "voice" ? (
                   <VoicePlayer path={m.media_path} durationMs={m.media_meta?.duration_ms} mine={mine} />
                 ) : m.kind === "call" ? (

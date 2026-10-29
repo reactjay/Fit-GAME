@@ -42,7 +42,7 @@ export type World = {
   created_at: string;
 };
 
-export type MessageKind = "text" | "image" | "voice" | "gift" | "call";
+export type MessageKind = "text" | "image" | "video" | "voice" | "gift" | "call";
 
 export type MediaMeta = {
   width?: number;

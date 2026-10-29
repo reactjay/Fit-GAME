@@ -8,12 +8,15 @@ import { pool } from "./pg";
 // browser uploading/downloading directly through short-lived signed URLs.
 // Development: files on local disk, served only to members of the world.
 
-export const MAX_BYTES = 10 * 1024 * 1024;
+export const MAX_BYTES = 50 * 1024 * 1024;
 export const ALLOWED = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
   "audio/webm",
   "audio/ogg",
   "audio/mp4",
@@ -21,7 +24,7 @@ export const ALLOWED = new Set([
   "audio/aac",
   "audio/x-m4a",
 ]);
-const PATH_RE = /^([0-9a-f-]{36})\/[0-9a-f-]{36}\.(jpg|png|webp|gif|webm|ogg|m4a|mp3|aac|bin)$/;
+const PATH_RE = /^([0-9a-f-]{36})\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm|mov|ogg|m4a|mp3|aac|bin)$/;
 
 export function worldOfPath(path: string) {
   return PATH_RE.exec(path)?.[1] ?? null;

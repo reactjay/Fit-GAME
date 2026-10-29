@@ -1,7 +1,8 @@
 import { uuid } from "@/lib/utils";
 
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
+export const VIDEO_TYPES = ["video/mp4", "video/webm", "video/quicktime"] as const;
 export const AUDIO_TYPES = ["audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg", "audio/aac", "audio/x-m4a"] as const;
 
 const EXT: Record<string, string> = {
@@ -9,6 +10,9 @@ const EXT: Record<string, string> = {
   "image/png": "png",
   "image/webp": "webp",
   "image/gif": "gif",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
   "audio/webm": "webm",
   "audio/ogg": "ogg",
   "audio/mp4": "m4a",
@@ -22,12 +26,15 @@ export function baseMime(type: string) {
   return type.split(";")[0].trim().toLowerCase();
 }
 
-export function validateMedia(file: { type: string; size: number }, kind: "image" | "voice"): string | null {
+export function validateMedia(file: { type: string; size: number }, kind: "image" | "video" | "voice"): string | null {
   const mime = baseMime(file.type);
-  const allowed: readonly string[] = kind === "image" ? IMAGE_TYPES : AUDIO_TYPES;
-  if (!allowed.includes(mime)) return kind === "image" ? "Please choose a JPG, PNG, WebP or GIF image." : "This audio format isn't supported.";
+  const allowed: readonly string[] = kind === "image" ? IMAGE_TYPES : kind === "video" ? VIDEO_TYPES : AUDIO_TYPES;
+  if (!allowed.includes(mime)) {
+    if (kind === "video") return "Please choose an MP4, WebM or MOV video.";
+    return kind === "image" ? "Please choose a JPG, PNG, WebP or GIF image." : "This audio format isn't supported.";
+  }
   if (file.size <= 0) return "That file looks empty.";
-  if (file.size > MAX_UPLOAD_BYTES) return "That file is over 10 MB. Try a smaller one.";
+  if (file.size > MAX_UPLOAD_BYTES) return "That file is over 50 MB. Try a smaller one.";
   return null;
 }
 
